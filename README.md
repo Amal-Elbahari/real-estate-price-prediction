@@ -188,6 +188,33 @@ git push origin feature/nom-feature
 
 Ouvrir une Pull Request
 
+## 📂 Data & Models
+
+⚠️ Les fichiers de données brutes et les modèles entraînés ne sont pas inclus dans ce dépôt afin de le garder léger.
+
+### Datasets
+- [Télécharger le dataset complet](https://drive.google.com/xxxxx) depuis Google Drive
+- Placez le dossier `data/` dans `src`
+
+### Modèles entraînés
+- [Télécharger le modèle XGBoost](https://drive.google.com/yyyyy)
+- [Télécharger le modèle PyTorch](https://drive.google.com/zzzzz)
+- Placez les modèles téléchargés dans `src/models/` avant de lancer les scripts.
+
+### Exemple d’arborescence attendue
+```bash
+src/
+└── data/
+│    └── images/
+├── models/
+│    └── Xgboost/
+│     ├── xgboost_model.joblib
+│   └── Pytorch/
+│     ├── pytorch_model.pt  
+│      
+└── ...
+
+
 ⚖️ Licence
 
 Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.

@@ -18,7 +18,7 @@ Ce projet fournit une solution complète pour :
 ---
 
 ## 🗂 Structure du projet
-
+```
 real-estate-price-prediction/
 ├── data/ # Données brutes et exemples
 ├── visualisation/ # Notebooks Jupyter pour exploration ou visualisation
@@ -57,7 +57,7 @@ real-estate-price-prediction/
 ├── scraping.md
 └── pipelines.md
 
-
+```
 ---
 
 ## 🛠 Technologies et bibliothèques utilisées

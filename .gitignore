@@ -1,0 +1,22 @@
+# Python
+venv/
+*.pt
+*.joblib
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# IDE
+.vscode/
+.idea/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# OS
+.DS_Store

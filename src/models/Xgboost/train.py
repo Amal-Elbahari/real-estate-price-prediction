@@ -31,7 +31,9 @@ df["bedrooms_per_surface"] = df["bedrooms"] / df["surface"].replace(0, 1)
 df["surface_x_rooms"] = df["surface"] * df["rooms"]
 df["surface_x_bathrooms"] = df["surface"] * df["bathrooms"]
 df["surface_x_bedrooms"] = df["surface"] * df["bedrooms"]
-
+# New features
+df['surface_sq'] = df['surface']**2 # Polynomial feature for surface
+df['surface_cub'] = df['surface']**3 # Polynomial feature for surface
 df["location_city"] = df["location"].str.split(",").str[0].str.strip()
 df["location_district"] = df["location"].str.split(",").str[1].str.strip().fillna("Other")
 
@@ -43,7 +45,7 @@ numeric_features = [
     "surface", "rooms", "bedrooms", "bathrooms",
     "rooms_per_surface", "bathrooms_per_surface", "bedrooms_per_surface",
     "surface_x_rooms", "surface_x_bathrooms", "surface_x_bedrooms",
-    "luxury_features_count"
+    "luxury_features_count","surface_sq", "surface_cub"
 ]
 binary_features = ["terrace", "garage", "elevator", "concierge", "pool", "security", "garden"]
 categorical_features_oh = ["property_category"]
@@ -81,18 +83,18 @@ def train_model_for_type(df_sub, type_name):
     def objective(trial):
         params = {
             "objective": "reg:squarederror",
-            "max_depth": trial.suggest_int("max_depth", 4, 8),
-            "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.05, log=True),
-            "subsample": trial.suggest_float("subsample", 0.7, 0.9),
-            "colsample_bytree": trial.suggest_float("colsample_bytree", 0.7, 0.9),
-            "min_child_weight": trial.suggest_int("min_child_weight", 5, 20),
-            "gamma": trial.suggest_float("gamma", 0, 0.2),
-            "reg_alpha": trial.suggest_float("reg_alpha", 0.1, 1.0),
-            "reg_lambda": trial.suggest_float("reg_lambda", 1.0, 3.0),
+            "max_depth": trial.suggest_int("max_depth", 4, 10),
+            "learning_rate": trial.suggest_float("learning_rate", 0.005, 0.1, log=True),
+            "subsample": trial.suggest_float("subsample", 0.6, 1.0),
+            "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
+            "min_child_weight": trial.suggest_int("min_child_weight", 1, 20),
+            "gamma": trial.suggest_float("gamma", 0.0, 0.4),
+            "reg_alpha": trial.suggest_float("reg_alpha", 0.0, 1.0),
+            "reg_lambda": trial.suggest_float("reg_lambda", 0.5, 5.0),
             "seed": 42,
             "verbosity": 0,
         }
-        num_boost_round = trial.suggest_int("n_estimators", 500, 1200)
+        num_boost_round = trial.suggest_int("n_estimators", 400, 1500)
 
         kf = KFold(n_splits=5, shuffle=True, random_state=42)  # 5-fold for stability
         scores = []
@@ -104,7 +106,6 @@ def train_model_for_type(df_sub, type_name):
             te = TargetEncoder(smoothing=0.3, min_samples_leaf=20)
             X_train_te = te.fit_transform(X_train_fold[target_encoded_features], y_train_fold)
             X_val_te = te.transform(X_val_fold[target_encoded_features])
-
             ct = ColumnTransformer([
                 ("num", StandardScaler(), numeric_features),
                 ("bin", "passthrough", binary_features),
@@ -139,8 +140,7 @@ def train_model_for_type(df_sub, type_name):
         return np.mean(scores)
 
     study = optuna.create_study(direction="maximize")
-    study.optimize(objective, n_trials=30, timeout=1800)
-
+    study.optimize(objective, n_trials=50, timeout=3600)
     # ---- Final Training ----
     best_params = study.best_params
     num_boost_round = best_params.pop("n_estimators")
@@ -179,7 +179,6 @@ def train_model_for_type(df_sub, type_name):
     print(pd.DataFrame([train_metrics]))
     print("\nTest Metrics:")
     print(pd.DataFrame([test_metrics]))
-
     # ---- Feature Importance ----
     importance = final_model.get_score(importance_type="gain")
     importance_df = pd.DataFrame({
@@ -211,7 +210,6 @@ def train_model_for_type(df_sub, type_name):
     }, filename)
 
     print(f"✅ Model saved for {type_name} as {filename}")
-
     return {
         "type": type_name,
         "train_accuracy_10%": train_metrics["accuracy_10%"],
